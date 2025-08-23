@@ -1,8 +1,9 @@
-flask 
+flask
+gunicorn
 opencv-python
 numpy
 pillow
 requests
 cloudinary
-dotenv
-gunicorn
+python-dotenv
+
