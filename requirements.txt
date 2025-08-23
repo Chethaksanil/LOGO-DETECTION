@@ -4,4 +4,5 @@ numpy
 pillow
 requests
 cloudinary
+dotenv
 gunicorn
