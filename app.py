@@ -104,19 +104,29 @@ def predict():
 def images():
     if "user" not in session:
         return redirect(url_for("login"))
-    res = cloudinary.api.resources(type="upload", prefix="logo_detections", max_results=100)
-    items=res.get("resources",[])
-    items=sorted(items,key=lambda r:str(r.get("created_at","")),reverse=True)
-    images=[
-        {
-            "url":r["secure_url"],
-            "public_id":r.get("public_id",""),
-            "created_at":r.get("created_at","")
-        }
-        for i in items
-    ]
-    
-    return render_template("images.html", images=images)  # images.html should loop: {% for img in images %}
+
+    # Fetch resources from Cloudinary
+    res = cloudinary.api.resources(
+        type="upload",
+        prefix="logo_detections/",
+        max_results=100,
+        resource_type="image"
+    )
+
+    resources = res.get("resources", [])
+
+    # Extract only URLs
+    images = []
+    for r in resources:
+        images.append({
+            "url": r.get("secure_url"),
+            "created_at": r.get("created_at")
+        })
+
+    # Sort by created_at so latest image comes first
+    images = sorted(images, key=lambda x: x["created_at"], reverse=True)
+
+    return render_template("images.html", images=images)
 
 # ==================================================
 @app.route("/cld_ping")
