@@ -1,0 +1,134 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Chethak</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Quicksand', sans-serif;
+    }
+    body {
+      background: linear-gradient(to right, #f9f9f9, #e0ecf8);
+      color: #333;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+      animation: fadeIn 1.2s ease-in-out;
+    }
+    header h1 {
+      text-align: center;
+      font-size: 3em;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+    .intro {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+      line-height: 1.6;
+      animation: slideIn 1s ease;
+    }
+    h3 {
+      margin-top: 30px;
+      color: #2c3e50;
+      font-size: 1.5em;
+      border-left: 6px solid #007BFF;
+      padding-left: 10px;
+    }
+    ul {
+      margin-top: 10px;
+      padding-left: 30px;
+    }
+    li {
+      margin-bottom: 10px;
+    }
+    .contact {
+      margin-top: 30px;
+    }
+    .btn-group {
+      margin-top: 30px;
+    }
+    .btn-group a {
+      display: inline-block;
+      padding: 12px 20px;
+      margin: 10px 10px 0 0;
+      background: #007BFF;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    .btn-group a:hover {
+      background: #0056b3;
+    }
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      color: #666;
+      font-size: 0.9em;
+    }
+    footer a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }@keyframes fadeIn {
+  0% {opacity: 0; transform: translateY(-20px);}
+  100% {opacity: 1; transform: translateY(0);}
+}
+
+@keyframes slideIn {
+  0% {opacity: 0; transform: translateX(-30px);}
+  100% {opacity: 1; transform: translateX(0);}
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Hi, I'm Chethak</h1>
+    </header><p class="intro">
+  I'm a final-year engineering student with a strong willingness to learn and grow in a professional environment. I bring a positive attitude, adaptability, and a willingness to take on new challenges.
+</p>
+
+<h3>My Projects</h3>
+<ul>
+  <li><strong>Fake Social Media Account Detection</strong> – ML + Blockchain</li>
+  <li><strong>Security Camera with Queue Analytics</strong> – OpenCV + Flask</li>
+  <li><strong>Safe Remote Purchase (Blockchain dApp)</strong></li>
+</ul>
+
+<h3>Contact</h3>
+<div class="contact">
+  📞 +91 6366128601<br>
+  📍 Udupi, India
+</div>
+
+<div class="btn-group">
+  <a href="/camera">🎥 Back to Camera</a>
+  <a href="/static/resume.pdf" target="_blank">📄 View Resume</a>
+  <a href="/static/resume.pdf" download>⬇ Download Resume</a>
+</div>
+
+<footer>
+  <p>
+    © 2025 Chethak | Built with ❤ using Flask <br>
+    <a href="/camera">Home</a> | <a href="/about">About</a> | <a href="/logout">Logout</a>
+  </p>
+</footer>
+
+  </div>
+</body>
+</html>

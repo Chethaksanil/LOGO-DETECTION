@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Camera | Logo Detector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    video {
+      width: 90%;
+      max-width: 600px;
+      border: 2px solid #000;
+      border-radius: 10px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 15px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .about-link {
+      position: fixed;
+      top:50%;
+      left:0;
+      transform: rotate(-90deg)
+    translate(-50%,0);
+      transform-origin: left top;
+      background-color:#f44336;
+      color:white;
+      padding:6px 12px;
+      text-decoration:none;
+      border-radius:5px 5px  0 0;
+      font-weight: bold;
+    }
+    #menu-icon {
+      font-size: 26px;
+      cursor: pointer;
+      position: fixed;
+      top: 15px;
+      left: 20px;
+      color: #000;
+      z-index: 1001;
+    }
+
+    .sidebar {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: #111;
+      overflow-x: hidden;
+      transition: 0.3s;
+      z-index: 1000;
+      padding-top: 60px;
+    }
+
+    .sidebar a {
+      padding: 10px 25px;
+      text-decoration: none;
+      font-size: 18px;
+      color: #fff;
+      display: block;
+    }
+
+    .sidebar a:hover {
+      background-color: #333;
+    }
+
+    .sidebar .closebtn {
+      position: absolute;
+      top: 10px;
+      right: 25px;
+      font-size: 36px;
+    }
+
+    #zoomSlider {
+      width: 300px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔍 Logo Detection</h2>
+  <video id="video" autoplay playsinline></video><br>
+
+  <!-- ✅ Zoom slider added -->
+  <label for="zoomSlider">Zoom:</label>
+  <input type="range" id="zoomSlider" min="1" max="1" step="0.1" value="1" style="display: none;"><br>
+
+  <button onclick="connectWallet()">🦊 Connect Wallet</button>
+  <button onclick="captureAndSend()">🎯 Detect Logo</button>
+  <input id="fileInput" type="file" accept="image/*" style="margin-top:10px;">/
+  <button id="uploadBtn" style="padding:10px 20px;margin:10px;">
+    Upload &Detect
+  </button>
+  <button onclick="getMyDetections()">📜 View My Detections</button>
+  <img id="resultImage" src="" alt="Captured Image" style="max-width: 100%; display:none;">
+
+  <div id="result">Waiting for camera...</div>
+  <a href="/about" class="about-link" target="_blank">About Me</a>
+  <a href="/images">
+  <button style="padding:10px 20px; margin:10px; border-radius:5px; background:#007bff; color:white; border:none; font-size:16px;">
+  View Captured Images
+  </button>
+   </a>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
+
+
