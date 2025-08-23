@@ -105,7 +105,17 @@ def images():
     if "user" not in session:
         return redirect(url_for("login"))
     res = cloudinary.api.resources(type="upload", prefix="logo_detections/", max_results=100)
-    images = [r["secure_url"] for r in res.get("resources", [])]
+    items=res.get("resources",[])
+    items=sorted(items,key=lambda r:r.get("created_at",""),reverse=True)
+    images=[
+        {
+            "url":r["secure_url"],
+            "public_id":r.get("public_id",""),
+            "created_at":r.get("created_at","")
+        }
+        for i in items
+    ]
+    
     return render_template("images.html", images=images)  # images.html should loop: {% for img in images %}
 
 # ==================================================
