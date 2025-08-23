@@ -109,6 +109,11 @@ def images():
     return render_template("images.html", images=images)  # images.html should loop: {% for img in images %}
 
 # ==================================================
-
+@app.route("/cld_ping")
+def cld_ping():
+    try:
+        return cloudinary.api.ping()  # expects {"status":"ok"}
+    except Exception as e:
+        return str(e), 500
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
