@@ -47,6 +47,7 @@
       <img id="heroImg" src="{{ latest.url }}" alt="Latest detection">
       <div class="meta">Newest • {{ latest.created_at }} • {{ latest.public_id }}</div>
     </div>
+  <a href="{{latest.url}}" download class="btn" style="margin-top:10px;display:inline-block;">DOWNLOAD</a>
 
     {% if images|length > 1 %}
     <!-- Grid of older images -->
@@ -54,6 +55,7 @@
       {% for img in images[1:] %}
         <div class="tile" onclick="showInHero('{{ img.url|e }}', '{{ (img.created_at or '')|e }}', '{{ (img.public_id or '')|e }}')">
           <img src="{{ img.url }}" loading="lazy" alt="Prev detection">
+          <a href="{{img.url}}"download class="btn" style="margin-top:6px;display:inline-block;">DOWNLOAD</a>
         </div>
       {% endfor %}
     </div>
@@ -74,3 +76,4 @@
   </script>
 </body>
 </html>
+
