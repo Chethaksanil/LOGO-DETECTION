@@ -104,9 +104,9 @@ def predict():
 def images():
     if "user" not in session:
         return redirect(url_for("login"))
-    res = cloudinary.api.resources(type="upload", prefix="logo_detections/", max_results=100)
+    res = cloudinary.api.resources(type="upload", prefix="logo_detections", max_results=100)
     items=res.get("resources",[])
-    items=sorted(items,key=lambda r:r.get("created_at",""),reverse=True)
+    items=sorted(items,key=lambda r:str(r.get("created_at","")),reverse=True)
     images=[
         {
             "url":r["secure_url"],
