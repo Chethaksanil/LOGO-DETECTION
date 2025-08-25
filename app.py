@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-import os, base64, io
+import os, base64, io, time
 from PIL import Image
 import cloudinary, cloudinary.uploader, cloudinary.api
 from dotenv import load_dotenv
@@ -7,7 +7,7 @@ from orb_detector import load_logo_features, detect_logo_orb
 
 # --- init ---
 load_dotenv()
-app = Flask(__name__)
+app = Flask(_name_)
 app.secret_key = "logoapp123"
 
 # --- Cloudinary (use .env) ---
@@ -25,7 +25,7 @@ PASSWORD = "admin"
 # --- ORB features (load once) ---
 logos, orb = load_logo_features()
 
-# ===================== Routes =====================
+# ==================== Routes ====================
 
 # Home -> Login
 @app.route("/")
@@ -48,7 +48,7 @@ def logout():
     session.pop("user", None)
     return redirect(url_for("login"))
 
-# About (you link to this from camera.html)
+# About (you link this from camera.html)
 @app.route("/about")
 def about():
     return render_template("about.html")
@@ -71,20 +71,32 @@ def predict():
     if not data_url or "," not in data_url:
         return jsonify({"message": "No image received", "valid": False}), 400
 
-    # decode base64 -> save captured.jpg
-    _, encoded = data_url.split(",", 1)
+    # ---- decode base64 -> save captured.png (LOSSLESS) ----
+    header, encoded = data_url.split(",", 1)
     image_bytes = base64.b64decode(encoded)
-    image = Image.open(io.BytesIO(image_bytes))
-    image.save("captured.jpg")
 
-    # detect via ORB
-    result = detect_logo_orb("captured.jpg", logos, orb)  # returns (label, matches) or ("This is not a valid logo", 0)
+    img = Image.open(io.BytesIO(image_bytes))
+    # Normalize mode so PNG saves correctly
+    if img.mode not in ("RGB", "RGBA"):
+        img = img.convert("RGB")
 
-    # upload to Cloudinary
-    up = cloudinary.uploader.upload("captured.jpg", folder="logo_detections")
+    tmp_path = "captured.png"
+    # optimize=True keeps lossless but reduces metadata where possible
+    img.save(tmp_path, format="PNG", optimize=True)
+
+    # ---- detect via ORB (use the saved PNG) ----
+    result = detect_logo_orb(tmp_path, logos, orb)  # returns (label, matches) or ("This is not a valid logo", 0)
+
+    # ---- upload to Cloudinary as PNG (keeps best quality) ----
+    up = cloudinary.uploader.upload(
+        tmp_path,
+        folder="logo_detections",
+        resource_type="image",
+        format="png"  # ensure stored/delivered as PNG
+    )
     image_url = up.get("secure_url", "")
 
-    # response for script.js
+    # ---- response for script.js ----
     if isinstance(result, tuple) and result[0] != "This is not a valid logo":
         return jsonify({
             "message": f"This logo belongs to {result}",
@@ -109,31 +121,32 @@ def images():
     res = cloudinary.api.resources(
         type="upload",
         prefix="logo_detections/",
-        max_results=100,
-        resource_type="image"
+        max_results=100
     )
-
     resources = res.get("resources", [])
 
-    # Extract only URLs
+    # Extract only URLs + timestamps (and public_id if you need)
     images = []
     for r in resources:
         images.append({
             "url": r.get("secure_url"),
-            "created_at": r.get("created_at")
+            "created_at": r.get("created_at"),
+            "public_id": r.get("public_id", "")
         })
 
     # Sort by created_at so latest image comes first
-    images = sorted(images, key=lambda x: x["created_at"], reverse=True)
+    images = sorted(images, key=lambda x: (x["created_at"] or ""), reverse=True)
 
     return render_template("images.html", images=images)
 
-# ==================================================
-@app.route("/cld_ping")
-def cld_ping():
+# (Optional) quick Cloudinary ping for debugging on Render
+@app.route("/_cld_ping")
+def _cld_ping():
     try:
-        return cloudinary.api.ping()  # expects {"status":"ok"}
+        return cloudinary.api.ping()  # expect {"status":"ok"}
     except Exception as e:
-        return str(e), 500
-if __name__ == "__main__":
+        return {"error": str(e)}, 500
+
+
+if _name_ == "_main_":
     app.run(host="0.0.0.0", port=5000, debug=True)
