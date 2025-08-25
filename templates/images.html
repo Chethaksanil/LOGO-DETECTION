@@ -75,11 +75,17 @@
       heroImg.src = url;
       const meta = document.querySelector('.hero .meta');
       if (meta) meta.textContent = (createdAt ? createdAt + ' • ' : '') + (pid || '');
+      const heroPid=document.getElementId('heroPid');
+      if(heroPid && pid)heroPid.value=pid;
+      window.scrollTo({top:0,behaviour:'smooth'});
+    }
+      
       // scroll to top on mobile after selecting
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   </script>
 </body>
 </html>
+
 
 
