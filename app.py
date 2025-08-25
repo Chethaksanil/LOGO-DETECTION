@@ -139,6 +139,22 @@ def images():
 
     return render_template("images.html", images=images)
 
+
+@app.route("/delete",methods=["POST"])
+def delete_image():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    pid=request.form.get("pid")
+    if not pid:
+        return "Missing public_id, 400
+    try:
+        res=cloudinary.uploader.destroy(pid,invalidate=True,resource_type="image")
+        if res.get("result")in("ok","not found"):
+            return redirect(url_for("images"))
+        return f"Delete failde: {res}", 500
+    except Exception as e:
+        return f"Error deleting: {e}", 500
+        
 # (Optional) quick Cloudinary ping for debugging on Render
 @app.route("/_cld_ping")
 def _cld_ping():
