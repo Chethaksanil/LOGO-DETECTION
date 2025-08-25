@@ -7,7 +7,7 @@ from orb_detector import load_logo_features, detect_logo_orb
 
 # --- init ---
 load_dotenv()
-app = Flask(_name_)
+app = Flask(__name__)
 app.secret_key = "logoapp123"
 
 # --- Cloudinary (use .env) ---
@@ -148,5 +148,5 @@ def _cld_ping():
         return {"error": str(e)}, 500
 
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
