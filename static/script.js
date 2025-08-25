@@ -1,204 +1,207 @@
-// ---------- GLOBALS ----------
-let provider;
-let signer;
-let contract;
+/* ================== GLOBALS ================== */
+let provider = null;
+let signer = null;
+let contract = null; // keep if you still wire a contract later
 
-// ====== CONTRACT SETUP ======
-const contractAddress = "0xbaf0ad7E1e26A05D70A3f8dC2D971E00705337b4"; // keep yours
-const contractABI = [
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": true,  "internalType": "address", "name": "user",     "type": "address" },
-      { "indexed": false, "internalType": "string",  "name": "logoName", "type": "string"  }
-    ],
-    "name": "DetectionRecorded",
-    "type": "event"
-  },
-  {
-    "inputs": [{ "internalType": "string", "name": "logoName", "type": "string" }],
-    "name": "recordDetection",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "", "type": "address" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
-    ],
-    "name": "detections",
-    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getMyDetections",
-    "outputs": [{ "internalType": "string[]", "name": "", "type": "string[]" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+// If you still need your ABI/contractAddress, paste them back here:
+// const contractAddress = "0x...";
+// const contractAbi = [ /* ... */ ];
 
-// ---------- WALLET ----------
+/* ================== WALLET (optional) ================== */
 async function connectWallet() {
-  if (typeof window.ethereum === "undefined") {
-    alert("🦊 Enkrypt not found. Install it first.");
-    return;
-  }
   try {
-    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    if (typeof window.ethereum === "undefined") {
+      alert("🦊 Metamask not found. Install it first.");
+      return;
+    }
+    provider = new ethers.BrowserProvider(window.ethereum, "any");
     await provider.send("eth_requestAccounts", []);
-    const accounts = await provider.listAccounts();
-    signer = provider.getSigner(accounts[0]);
-    contract = new ethers.Contract(contractAddress, contractABI, signer);
-    alert("✅ Enkrypt wallet connected!");
+    signer = await provider.getSigner();
+
+    // If you still use a contract:
+    // contract = new ethers.Contract(contractAddress, contractAbi, signer);
+    alert("✅ Wallet connected!");
   } catch (err) {
-    console.error("Connection error:", err);
+    console.error("Wallet connection error:", err);
     alert("❌ Wallet connection failed: " + err.message);
   }
 }
 
-// ---------- DETECTION HELPERS ----------
+/* ================== DETECTION HELPERS ================== */
 async function sendToPredict(dataURL) {
   try {
     const res = await fetch("/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: dataURL }) // your Flask /predict expects {image: "data:image/...;base64,..."}
+      body: JSON.stringify({ image: dataURL }) // Flask expects {image:'data:image/...base64,...'}
     });
     const data = await res.json();
 
-    // Show message on page if #result exists, else alert
+    // Show message on page
     const resultEl = document.getElementById("result");
-    if (resultEl) resultEl.innerText = data.message || (data.valid ? "Valid logo" : "This is not a valid logo");
-    else alert(data.message || (data.valid ? "Valid logo" : "This is not a valid logo"));
+    if (resultEl) resultEl.innerText = data.message || "";
 
-    // Optional preview: if backend returns Cloudinary URL
+    // Show returned image (Cloudinary URL)
     if (data.image_url) {
-      const img = document.getElementById("resultImage");
-      if (img) img.src = data.image_url;
-    }
-
-    // Record on-chain if valid and contract is ready
-    if (data.valid && data.logoName && contract) {
-      try {
-        const tx = await contract.recordDetection(data.logoName);
-        await tx.wait();
-        alert("🧾 Detection recorded on Sepolia!");
-      } catch (err) {
-        console.error("Blockchain Error:", err);
-        alert("❌ Blockchain Error: " + err.message);
+      const imgEl = document.getElementById("captured_image");
+      if (imgEl) {
+        imgEl.style.display = "block";
+        imgEl.src = data.image_url;
       }
     }
+
+    // Optional: if you still record on-chain when valid
+    // if (data.valid && contract) {
+    //   try {
+    //     const tx = await contract.recordDetection(data.logoName || "");
+    //     await tx.wait();
+    //     alert("✅ Detection recorded on-chain");
+    //   } catch (e) {
+    //     console.error("Blockchain error:", e);
+    //     alert("⚠️ Blockchain error: " + e.message);
+    //   }
+    // }
   } catch (e) {
-    console.error(e);
+    console.error("Predict failed:", e);
     alert("❌ Detection failed: " + e.message);
   }
 }
 
-// Capture current <video> frame and send
-async function captureAndSend() {
+/* ================== CAMERA ================== */
+async function startCamera() {
+  const video = document.getElementById("video");
+  const zoomSlider = document.getElementById("zoomSlider");
+  if (!video) return;
+
+  // Request the highest practical resolution from the device
+  const constraints = {
+    audio: false,
+    video: {
+      facingMode: (navigator.userAgent.toLowerCase().includes("iphone") || navigator.userAgent.toLowerCase().includes("ipad"))
+        ? "user"        // iOS often flips; you can change to 'environment' if you prefer
+        : { ideal: "environment" }, // back camera on phones, front on PC
+      width:  { ideal: 1920 },
+      height: { ideal: 1080 }
+    }
+  };
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+    await video.play();
+
+    // Zoom support (where available)
+    if (zoomSlider && stream.getVideoTracks().length) {
+      const [track] = stream.getVideoTracks();
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if (caps.zoom !== undefined) {
+        const step = caps.zoom && caps.zoom.step ? caps.zoom.step : 0.1;
+        zoomSlider.min = caps.zoom.min || 1;
+        zoomSlider.max = caps.zoom.max || 3;
+        zoomSlider.step = step;
+        zoomSlider.value = Math.min(zoomSlider.max, Math.max(zoomSlider.min, 1));
+        zoomSlider.style.display = "inline";
+
+        zoomSlider.addEventListener("input", async () => {
+          try {
+            await track.applyConstraints({ advanced: [{ zoom: Number(zoomSlider.value) }] });
+          } catch (err) {
+            console.warn("Zoom apply error:", err);
+          }
+        });
+      } else {
+        zoomSlider.style.display = "none";
+      }
+    }
+  } catch (err) {
+    console.error("Could not access camera:", err);
+    alert("❌ Could not access camera: " + err.message);
+  }
+}
+
+// Capture current video frame at full native resolution and send as PNG
+async function detectLogo() {
   const video = document.getElementById("video");
   if (!video) {
     alert("Video element not found on page.");
     return;
   }
-  // Create an offscreen canvas
+
+  // Use the video’s native dimensions
+  const w = video.videoWidth || 640;
+  const h = video.videoHeight || 480;
+
   const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth || 640;
-  canvas.height = video.videoHeight || 480;
+  canvas.width = w;
+  canvas.height = h;
+
   const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const imageData = canvas.toDataURL("image/jpeg"); // -> "data:image/jpeg;base64,..."
-  await sendToPredict(imageData);
+  ctx.drawImage(video, 0, 0, w, h);
+
+  // IMPORTANT: export as PNG (lossless, better for clarity)
+  const dataURL = canvas.toDataURL("image/png"); // <-- changed from image/jpeg
+  await sendToPredict(dataURL);
 }
 
-// For your existing button that calls detectLogo()
-function detectLogo() {
-  return captureAndSend();
-}
+/* ================== FILE UPLOAD -> DETECT ================== */
+function initUploadAndSend() {
+  const uploadBtn = document.getElementById("uploadbtn");
+  const fileInput = document.getElementById("fileInput");
+  if (!uploadBtn || !fileInput) return;
 
-// ---------- FILE UPLOAD (Choose file -> Upload & Detect) ----------
-const fileInput = document.getElementById("fileInput");
-const uploadBtn = document.getElementById("uploadBtn");
-
-if (uploadBtn) {
   uploadBtn.addEventListener("click", () => {
-    const file = fileInput?.files?.[0];
-    if (!file) {
+    if (!fileInput.files || !fileInput.files[0]) {
       alert("Please choose an image first.");
       return;
     }
+    const file = fileInput.files[0];
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataURL = reader.result; // "data:image/...;base64,..."
-      sendToPredict(dataURL);
+    reader.onload = async (e) => {
+      // We will accept whatever data URL the browser generates (png/jpg)
+      // If you want to force PNG upload even from file, we could draw it
+      // on a canvas and export as PNG. Uncomment below to force PNG:
+
+      // const img = new Image();
+      // img.onload = async () => {
+      //   const c = document.createElement("canvas");
+      //   c.width = img.naturalWidth;
+      //   c.height = img.naturalHeight;
+      //   const cx = c.getContext("2d");
+      //   cx.drawImage(img, 0, 0);
+      //   const pngDataURL = c.toDataURL("image/png");
+      //   await sendToPredict(pngDataURL);
+      // };
+      // img.src = e.target.result;
+
+      // Default: send the data URL as is
+      await sendToPredict(e.target.result);
     };
     reader.readAsDataURL(file);
   });
 }
 
-// ---------- CAMERA with ZOOM ----------
-function startCamera() {
-  const video = document.getElementById("video");
-  const zoomSlider = document.getElementById("zoomSlider");
-  if (!video) return;
-
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const constraints = {
-    video: isMobile
-      ? { facingMode: { exact: "environment" } } // back camera on phone
-      : { facingMode: "user" }                   // front camera on PC
-  };
-
-  navigator.mediaDevices.getUserMedia(constraints)
-    .then((stream) => {
-      video.srcObject = stream;
-      const track = stream.getVideoTracks()[0];
-      const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-      const settings = track.getSettings ? track.getSettings() : {};
-
-      if (zoomSlider && capabilities.zoom) {
-        zoomSlider.min = capabilities.zoom.min;
-        zoomSlider.max = capabilities.zoom.max;
-        zoomSlider.step = capabilities.zoom.step || 0.1;
-        zoomSlider.value = settings.zoom || 1;
-        zoomSlider.style.display = "inline";
-
-        zoomSlider.oninput = () => {
-          const zoomLevel = parseFloat(zoomSlider.value);
-          track.applyConstraints({ advanced: [{ zoom: zoomLevel }] });
-        };
-      } else if (zoomSlider) {
-        zoomSlider.style.display = "none";
-        console.warn("Zoom not supported on this device.");
-      }
-    })
-    .catch((err) => {
-      console.error("Camera Error:", err);
-      alert("❌ Could not access camera: " + err.message);
-    });
-}
-window.onload = startCamera;
-
-// ---------- VIEW MY DETECTIONS (BLOCKCHAIN) ----------
-async function getMyDetections() {
-  if (!contract) {
-    alert("❌ Wallet not connected!");
-    return;
-  }
-  try {
-    const detections = await contract.getMyDetections();
-    alert("🧾 Your Detections:\n" + detections.join("\n"));
-  } catch (err) {
-    console.error("Get Detections Error:", err);
-    alert("❌ Error getting detections: " + err.message);
-  }
+/* ================== VIEW MY DETECTIONS ================== */
+async function viewDetections() {
+  // server shows latest hero + grid
+  window.location.href = "/images";
 }
 
-// Expose functions used by HTML buttons
+/* ================== BIND BUTTONS TO WINDOW (for inline HTML onclick) ================== */
 window.connectWallet = connectWallet;
 window.detectLogo = detectLogo;
-window.getMyDetections = getMyDetections;
+window.viewDetections = viewDetections;
+
+/* If you call these by id from HTML instead of inline onclick */
+window.addEventListener("DOMContentLoaded", () => {
+  startCamera();
+  initUploadAndSend();
+
+  const connectBtn = document.getElementById("connectWalletBtn");
+  if (connectBtn) connectBtn.addEventListener("click", connectWallet);
+
+  const detectBtn = document.getElementById("detectBtn");
+  if (detectBtn) detectBtn.addEventListener("click", detectLogo);
+
+  const viewBtn = document.getElementById("viewDetectionsBtn");
+  if (viewBtn) viewBtn.addEventListener("click", viewDetections);
+});
