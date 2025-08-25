@@ -149,8 +149,14 @@ function startCamera() {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const constraints = {
     video: isMobile
-      ? { facingMode: { exact: "environment" } } // back camera on phone
-      : { facingMode: "user" }                   // front camera on PC
+      ? { facingMode: { exact: "environment" },
+         width:{ideal:1920},
+         height:{ideal:1080}
+        } // back camera on phone
+      : { facingMode: "user" ,
+         width:{ideal:1920},
+         height:{ideal:1080}
+        }                   // front camera on PC
   };
 
   navigator.mediaDevices.getUserMedia(constraints)
