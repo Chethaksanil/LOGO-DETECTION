@@ -48,6 +48,11 @@
       <div class="meta">Newest • {{ latest.created_at }} • {{ latest.public_id }}</div>
     </div>
   <a href="{{latest.url}}" download class="btn" style="margin-top:10px;display:inline-block;">DOWNLOAD</a>
+  <form method="POST" action="{{url_for('delete_image')}}" on submit="return confirm('Delete this image?');"
+    style="margin-top:10px;">
+    <input type="hidden" name="pid" id="heroPid" value="{{latest.public_id}}">
+    <button class="btn" style="background:#e74c3c;">DELETE</button>
+  </form>
 
     {% if images|length > 1 %}
     <!-- Grid of older images -->
@@ -76,4 +81,5 @@
   </script>
 </body>
 </html>
+
 
