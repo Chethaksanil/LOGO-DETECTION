@@ -146,7 +146,7 @@ def delete_image():
         return redirect(url_for("login"))
     pid=request.form.get("pid")
     if not pid:
-        return "Missing public_id, 400
+        return "Missing public_id", 400
     try:
         res=cloudinary.uploader.destroy(pid,invalidate=True,resource_type="image")
         if res.get("result")in("ok","not found"):
