@@ -150,8 +150,8 @@ function startCamera() {
   const constraints = {
     video: isMobile
       ? { facingMode: { exact: "environment" },
-         width:{ideal:1920},
-         height:{ideal:1080}
+         width:{ideal:740},
+         height:{ideal:540}
         } // back camera on phone
       : { facingMode: "user" ,
          width:{ideal:1920},
