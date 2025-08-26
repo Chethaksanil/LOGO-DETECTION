@@ -154,8 +154,8 @@ function startCamera() {
          height:{ideal:720}
         } // back camera on phone
       : { facingMode: "user" ,
-         width:{ideal:1920},
-         height:{ideal:1080}
+         width:{ideal:540},
+         height:{ideal:720}
         }                   // front camera on PC
   };
 
