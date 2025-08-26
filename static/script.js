@@ -150,14 +150,14 @@ function startCamera() {
   const constraints = {
     video: isMobile
       ? { facingMode: { exact: "environment" },
-         width:{ideal:1280},
-         height:{ideal:720},
-         aspectRatio:{ideal:1280/720}
+         width:{ideal:720},
+         height:{ideal:540},
+         aspectRatio:{ideal:720/540}
         } // back camera on phone
       : { facingMode: "user" ,
-         width:{ideal:540},
-         height:{ideal:720},
-         aspectRatio:{ideal:1280/720}
+         width:{ideal:720},
+         height:{ideal:540},
+         aspectRatio:{ideal:720/540}
         }                   // front camera on PC
   };
 
